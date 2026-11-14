@@ -1,0 +1,107 @@
+# ==============================================================================
+# Environment variables & secrets (CRITICAL: Never commit secrets)
+# ==============================================================================
+.env
+.env.*
+*.env
+!.env.example
+!.env.template
+
+# Streamlit secrets
+.streamlit/secrets.toml
+
+# Private keys / certificates / credentials
+*.pem
+*.key
+*.cert
+*.crt
+*credentials*.json
+service_account*.json
+
+# ==============================================================================
+# Python virtual environments
+# ==============================================================================
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# ==============================================================================
+# Python cache and bytecode
+# ==============================================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# ==============================================================================
+# Testing & coverage
+# ==============================================================================
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+
+# ==============================================================================
+# Machine Learning datasets, models, and checkpoints
+# ==============================================================================
+# Ignore model weight files / checkpoints / serialized artifacts
+*.pt
+*.pth
+*.bin
+*.onnx
+*.pkl
+*.pickle
+*.h5
+*.joblib
+
+# Ignore dataset & model folder contents except .gitkeep
+data/*
+!data/.gitkeep
+models/*
+!models/.gitkeep
+
+# ==============================================================================
+# Jupyter Notebooks & checkpoints
+# ==============================================================================
+.ipynb_checkpoints/
+*-checkpoint.ipynb
+
+# ==============================================================================
+# Logs, dumps, and temporary files
+# ==============================================================================
+*.log
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# ==============================================================================
+# Operating System files
+# ==============================================================================
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# ==============================================================================
+# IDE / Editor files
+# ==============================================================================
+.idea/
+*.sublime-project
+*.sublime-workspace
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json

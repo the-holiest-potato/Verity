@@ -1,0 +1,8 @@
+streamlit
+python-dotenv
+requests
+pandas
+beautifulsoup4
+trafilatura
+google-genai
+scikit-learn
