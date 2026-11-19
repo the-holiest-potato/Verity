@@ -6,3 +6,7 @@ beautifulsoup4
 trafilatura
 google-genai
 scikit-learn
+tavily-python
+torch
+transformers
+accelerate

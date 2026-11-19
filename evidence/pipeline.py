@@ -211,19 +211,20 @@ def extract_source_post_dates(article_content):
             })
 
     return post_dates
-
-
 def find_matching_source_context_date(
     passage_text,
     passage_action,
     source_date_candidates
 ):
     """
-    Inherit an event date only when exactly one date matches
-    the action and relevant rate subject.
+    Inherit an event date only when the extracted passage
+    matches the exact action sentence associated with that date.
+
+    If multiple dates are associated with the same sentence,
+    do not guess.
     """
 
-    if not passage_action:
+    if not passage_text or not passage_action:
         return None
 
     if extract_dates(passage_text):
@@ -232,10 +233,20 @@ def find_matching_source_context_date(
     if not has_rate_subject(passage_text):
         return None
 
+    def normalise(text):
+        return re.sub(r"\s+", " ", text.lower()).strip()
+
+    normalised_passage = normalise(passage_text)
+
     matching_candidates = [
         candidate
         for candidate in source_date_candidates
-        if candidate["action"] == passage_action
+        if (
+            candidate.get("action") == passage_action
+            and candidate.get("association_type") == "adjacent_event_context"
+            and candidate.get("source_sentence")
+            and normalise(candidate["source_sentence"]) == normalised_passage
+        )
     ]
 
     matching_dates = {
@@ -280,7 +291,10 @@ def investigate_claim(claim, max_sources=5):
 
         page = extract_page(url)
 
-        source_info = classify_source(url)
+        try:
+            source_info = classify_source(url, claim=claim)
+        except TypeError:
+            source_info = classify_source(url)
 
         article_content = page.get("content", "")
 
@@ -413,6 +427,9 @@ def investigate_claim(claim, max_sources=5):
             "domain": source_info.get("domain"),
 
             "source_class": source_info.get("source_class"),
+            "source_tier": source_info.get("tier"),
+            "is_primary": source_info.get("is_primary", False),
+            "is_social_media": source_info.get("is_social_media", False),
 
             "classification_reason": source_info.get(
                 "classification_reason"
