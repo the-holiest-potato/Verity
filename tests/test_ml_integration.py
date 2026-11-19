@@ -1,8 +1,14 @@
 import pytest
+from pathlib import Path
+from unittest.mock import patch
 from ml.predict import (
     VerityPredictor,
     PREDICTION_MAPPING,
     build_model_evidence,
+    is_valid_local_model_dir,
+    resolve_model_target,
+    ModelNotFoundError,
+    DEFAULT_LOCAL_MODEL_PATH,
 )
 
 
@@ -89,3 +95,50 @@ def test_predictor_inference():
     assert isinstance(result["model_score"], float)
     assert "all_scores" in result
     assert len(result["all_scores"]) == 4
+
+
+def test_is_valid_local_model_dir():
+    # Real local model directory exists and has config.json + model.safetensors
+    assert is_valid_local_model_dir(DEFAULT_LOCAL_MODEL_PATH) is True
+
+    # Non-existent directory
+    assert is_valid_local_model_dir("/tmp/non_existent_model_dir_xyz") is False
+    assert is_valid_local_model_dir(None) is False
+
+
+def test_resolve_model_target_local_when_present():
+    target, is_local, token = resolve_model_target(None)
+    assert is_local is True
+    assert Path(target).resolve() == DEFAULT_LOCAL_MODEL_PATH.resolve()
+
+
+def test_resolve_model_target_missing_local_raises_model_not_found():
+    with patch("ml.predict.is_valid_local_model_dir", return_value=False), \
+         patch("ml.predict.get_configured_hf_repo_id", return_value=None):
+        with pytest.raises(ModelNotFoundError) as exc_info:
+            resolve_model_target(None)
+        # Verify that the error message contains actionable instructions
+        assert "Verity ML model could not be loaded" in str(exc_info.value)
+        assert "VERITY_MODEL_REPO" in str(exc_info.value)
+
+
+def test_resolve_model_target_env_repo_id_when_local_missing():
+    with patch("ml.predict.is_valid_local_model_dir", return_value=False), \
+         patch("ml.predict.get_configured_hf_repo_id", return_value="custom-org/verity-model"), \
+         patch("ml.predict.get_hf_auth_token", return_value="test_token_123"):
+        target, is_local, token = resolve_model_target(None)
+        assert is_local is False
+        assert target == "custom-org/verity-model"
+        assert token == "test_token_123"
+
+
+def test_resolve_model_target_explicit_hf_repo():
+    target, is_local, token = resolve_model_target("my-user/verity-roberta")
+    assert is_local is False
+    assert target == "my-user/verity-roberta"
+
+
+def test_resolve_model_target_invalid_fs_path():
+    with pytest.raises(ModelNotFoundError):
+        resolve_model_target("/mount/src/verity/models/verity-distilroberta")
+

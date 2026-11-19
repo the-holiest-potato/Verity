@@ -147,13 +147,14 @@ def determine_overall_verdict(claim, assessment, ml_result):
                 "ml_raw_score": raw_score,
             }
         else:
+            classifier_text = f"returned {raw_pred}" if raw_pred else "was unavailable in this deployment"
             return {
                 "overall_verdict": "Review Required",
                 "verdict_reason": (
                     f"Supporting evidence was retrieved from {supporting_sources} source(s), but classifier "
-                    f"returned {raw_pred}. Additional verification is recommended."
+                    f"{classifier_text}. Additional verification is recommended."
                 ),
-                "has_disagreement": True,
+                "has_disagreement": True if raw_pred else False,
                 "evidence_stance": evidence_stance,
                 "ml_prediction": raw_pred,
                 "ml_raw_score": raw_score,

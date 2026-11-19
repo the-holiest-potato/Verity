@@ -30,11 +30,18 @@ def load_predictor():
     return VerityPredictor()
 
 
+model_load_error = None
 try:
     predictor = load_predictor()
 except Exception as e:
     predictor = None
-    st.error(f"Error loading Verity ML model: {e}")
+    model_load_error = str(e)
+    st.warning(
+        "⚠️ **Verity ML Model is not loaded on this deployment:**\n\n"
+        f"*{model_load_error}*\n\n"
+        "Claim extraction (Gemini) and Evidence Retrieval & Assessment (Tavily/web sources) "
+        "will continue to work normally."
+    )
 
 article = st.text_area(
     "Enter a news article or factual claim",
@@ -116,7 +123,7 @@ if verify_button or extract_only_button:
                         else:
                             missing_evidence = False
                             if predictor is None:
-                                ml_error = "Model is not loaded."
+                                ml_error = model_load_error or "Model is not loaded."
                             else:
                                 with st.spinner("Running ML model inference..."):
                                     try:
@@ -205,6 +212,12 @@ if verify_button or extract_only_button:
                                 "⚠️ Missing Evidence: No relevant passages were extracted from "
                                 "retrieved web sources. Machine learning model prediction cannot "
                                 "be evaluated without evidence."
+                            )
+                        elif predictor is None:
+                            st.warning(
+                                "⚠️ **ML Classifier Unavailable:** DistilRoBERTa model weights are not loaded. "
+                                "Claim verification relies on the evidence retrieval and temporal assessment above. "
+                                "To enable ML predictions on Streamlit Cloud, configure `VERITY_MODEL_REPO` in Streamlit Secrets."
                             )
                         elif ml_error:
                             st.error(f"❌ Model Prediction Error: {ml_error}")
